@@ -31,7 +31,7 @@ async def async_setup_entry(
             continue
 
         for control in controls:
-            if control["type"] in ("biofreshplus", "hydrobreeze"):
+            if control["type"] in ("biofreshplus", "hydrobreeze", "IceMakerControl"):
                 entities.extend(
                     [
                         LiebherrSelect(api, coordinator, appliance, control),
@@ -60,6 +60,12 @@ class LiebherrSelect(SelectEntity):
             case "hydrobreeze":
                 self._attr_icon = "mdi:water"
                 self._attr_options = ["OFF", "LOW", "MEDIUM", "HIGH"]
+            case "IceMakerControl":
+                self._attr_icon = "mdi:ice-cream"
+                if control.get("identifier", control["hasMaxIce"]) == True:
+                    self._attr_options = ["OFF", "ON", "MAX_ICE"]
+                else:
+                    self._attr_options = ["OFF", "ON"]
 
     @property
     def device_info(self):
@@ -88,7 +94,11 @@ class LiebherrSelect(SelectEntity):
                 controls = device.get("controls", [])
                 for control in controls:
                     if control.get("identifier", control["type"]) == self._identifier:
-                        return control.get("currentMode", None)
+                        # IceMakerControl
+                        if control.get("identifier", control["type"]) == "IceMakerControl":
+                            return control.get("iceMakerMode", None)
+                        else:
+                            return control.get("currentMode", None)
         return None
 
     async def async_select_option(self, option: str):
