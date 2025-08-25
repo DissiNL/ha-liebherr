@@ -62,6 +62,8 @@ class LiebherrSelect(SelectEntity):
                 self._attr_options = ["OFF", "LOW", "MEDIUM", "HIGH"]
             case "IceMakerControl":
                 self._attr_icon = "mdi:ice-cream"
+                # https://developer.liebherr.com/apis/smartdevice-homeapi/swagger-ui/#/Manage%20Controls/getDeviceControlByName
+                # Ensure the max ice is supported, if not leave out the MAX_ICE option.
                 if control.get("identifier", control["hasMaxIce"]) == True:
                     self._attr_options = ["OFF", "ON", "MAX_ICE"]
                 else:
@@ -96,6 +98,7 @@ class LiebherrSelect(SelectEntity):
                     if control.get("identifier", control["type"]) == self._identifier:
                         # IceMakerControl
                         if control.get("identifier", control["type"]) == "IceMakerControl":
+                            # https://developer.liebherr.com/apis/smartdevice-homeapi/swagger-ui/#/Manage%20Controls/getDeviceControlByName
                             return control.get("iceMakerMode", None)
                         else:
                             return control.get("currentMode", None)
@@ -107,8 +110,13 @@ class LiebherrSelect(SelectEntity):
             _LOGGER.error("Invalid option selected: %s", option)
             return
 
-        data = ModeControlRequest(mode=option)
-        await self.api.set_value(
+        if self._control["name"] == "IceMakerControl":
+            # https://developer.liebherr.com/apis/smartdevice-homeapi/swagger-ui/#/Manage%20Controls/setIceMaker
+            data = ModeControlRequest(iceMakerMode=option)
+        else:
+            data = ModeControlRequest(mode=option)
+
+        await self._api.set_value(
             self._appliance["deviceId"], self._control["name"], data
         )
 
