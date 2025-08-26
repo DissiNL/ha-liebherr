@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 from .models import ModeControlRequest
+from .models import ModeIcemakerRequest
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -110,15 +111,14 @@ class LiebherrSelect(SelectEntity):
             _LOGGER.error("Invalid option selected: %s", option)
             return
 
-        if self._control["name"] == "IceMakerControl":
+        if self._control["name"] == "icemaker":
             # https://developer.liebherr.com/apis/smartdevice-homeapi/swagger-ui/#/Manage%20Controls/setIceMaker
-            data = ModeControlRequest(iceMakerMode=option)
+            data = ModeIcemakerRequest(iceMakerMode=option, zoneId=self._control["zoneId"])
         else:
             data = ModeControlRequest(mode=option)
-
+        
         await self._api.set_value(
-            self._appliance["deviceId"], self._control["name"], data
-        )
-
+                self._appliance["deviceId"], self._control["name"], data
+            )
         await asyncio.sleep(5)
         await self._coordinator.async_request_refresh()

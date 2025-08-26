@@ -30,3 +30,8 @@ class ModeZoneControlRequest:
 @dataclass
 class ModeControlRequest:
     mode: str
+
+@dataclass
+class ModeIcemakerRequest:
+    iceMakerMode: str
+    zoneId: int
